@@ -44,10 +44,6 @@
       register: reboot_started
       ignore_errors: true
 
-    # this task is to wait for 3 minutues for system to come up after the reboot
-    - name: pause for 180 secs
-      pause:
-        minutes: 3
 
     # this task is to confirm,system is up and responding to ssh
     - name: check if system responding to ssh
