@@ -21,7 +21,7 @@
 
     # this task will upgrade/install the rpm's if application is stopped
     - name:  Updating Linux Patching
-      command:  yum update -y
+      command:  sudo yum update -y
       register: output
     - debug: var=output.stdout
 
