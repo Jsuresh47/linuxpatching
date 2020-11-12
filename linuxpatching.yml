@@ -21,6 +21,7 @@
 
     # this task will upgrade/install the rpm's if application is stopped
     - name:  Updating Linux Patching
+      become_user: ansible
       command:  sudo yum update -y
       register: output
     - debug: var=output.stdout
@@ -37,7 +38,7 @@
 
     # this task is to restart the system
     - name: restart system
-      command: shutdown -r +1  "Rebooting System After Patching"
+      command: sudo shutdown -r +1  "Rebooting System After Patching"
       async: 0
       poll: 0
       when: reboot_required.stdout == "reboot_needed"
