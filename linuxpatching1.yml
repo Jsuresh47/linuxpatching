@@ -37,7 +37,7 @@
       command: sudo yum update -y
       register: output
 
- when: app_process_check.stdout == "process_not_running" and ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat' and release.stdout != 'Release not set'
+      when: app_process_check.stdout == "process_not_running" and ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat' and release.stdout != 'Release not set'
     # To check kernel version before reboot server
     - name: Check kerner version
       command: uname -r
