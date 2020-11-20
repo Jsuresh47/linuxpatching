@@ -1,0 +1,67 @@
+---
+- hosts: all
+  become: yes
+  become_user: ansible
+  serial: 2
+
+
+  tasks:
+
+    # purpose of this task to check if application is running or stopped
+    - name:  verify application/database processes are not running
+      shell: if ps -eaf | egrep 'apache|http'|grep -v grep > /dev/null ;then echo 'process_running';else echo 'process_not_running';fi
+      ignore_errors: true
+      register: app_process_check
+    - debug: var=app_process_check.stdout
+
+    # this task is decision,play will fail/quit,if application is running
+    - name:  decision point to start patching
+      fail: msg="{{ inventory_hostname }} have running Application.Please stop the application first, then attempt patching."
+      when: app_process_check.stdout == "process_running"
+
+    # Checking subscription-manager release, if Release not set then run further
+    - name: checking subscription-manager release
+      command: sudo subscription-manager release
+      register: release
+    - debug: var=release.stdout
+
+    # this task is decision,play will fail/quit,if application is running
+    - name:  decision point to check subscription
+      fail: msg="{{ inventory_hostname }} have subsription release is set."
+      when: release.stdout != "Release not set"
+
+
+    # this task will upgrade/install the rpm's if application is stopped
+    - name:  Updating Linux Patching
+      become_user: ansible
+      command: sudo yum update -y
+      register: output
+
+ when: app_process_check.stdout == "process_not_running" and ansible_distribution == 'CentOS' or ansible_distribution == 'RedHat' and release.stdout != 'Release not set'
+    # To check kernel version before reboot server
+    - name: Check kerner version
+      command: uname -r
+      register: kernel
+    - debug: var=kernel.stdout
+
+
+    # this task is to check if kernel update happend and system needs reboot ot not
+    #- name: check if reboot required after kernel update.
+    #  shell: KERNEL_NEW=$(rpm -q --last kernel |head -1 | awk '{print $1}' | sed 's/kernel-//'); KERNEL_NOW=$(uname -r); if [[ $KERNEL_NEW != $KERNEL_NOW ]]; then echo "reboot_needed"; else echo "reboot_not_needed"; fi
+      ignore_errors: true
+     # register: reboot_required
+   # - debug: var=reboot_required.stdout
+
+    # this task is to restart the system
+    - name: restart system
+      command: sudo shutdown -r +1  "Rebooting System After Patching"
+      async: 0
+      poll: 0
+     #when: reboot_required.stdout == "reboot_needed"
+     # register: reboot_started
+      ignore_errors: true
+    - name: Check kerner version
+      command: uname -r
+      register: kernel
+    - debug: var=kernel.stdout
+
